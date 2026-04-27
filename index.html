@@ -4,10 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PropertyScout — แจ้งปัญหา / Report Issue</title>
+
+  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -19,7 +24,6 @@
       color: #182C54;
     }
 
-    /* Header */
     .header {
       background: #182C54;
       padding: 20px 20px 24px;
@@ -64,7 +68,6 @@
       color: rgba(255,255,255,0.7);
     }
 
-    /* Step indicator */
     .step-indicator {
       display: flex;
       align-items: center;
@@ -87,7 +90,6 @@
       border-radius: 4px;
     }
 
-    /* Card */
     .card {
       background: #fff;
       max-width: 480px;
@@ -95,7 +97,6 @@
       padding: 24px 20px 32px;
     }
 
-    /* Field */
     .field {
       margin-bottom: 20px;
     }
@@ -146,7 +147,6 @@
       font-weight: 400;
     }
 
-    /* Category cards (step 1) */
     .category-list {
       display: flex;
       flex-direction: column;
@@ -208,7 +208,6 @@
       flex-shrink: 0;
     }
 
-    /* Inquiry type list (step 2) */
     .inquiry-list {
       display: flex;
       flex-direction: column;
@@ -280,7 +279,6 @@
       display: block;
     }
 
-    /* Textarea */
     textarea {
       width: 100%;
       border: 1.5px solid #e0e4ea;
@@ -310,7 +308,6 @@
       margin: 20px 0;
     }
 
-    /* Selected category badge */
     .selected-category-badge {
       display: inline-flex;
       align-items: center;
@@ -325,7 +322,6 @@
       margin-bottom: 16px;
     }
 
-    /* Back button */
     .back-btn {
       display: inline-flex;
       align-items: center;
@@ -342,7 +338,6 @@
 
     .back-btn:hover { color: #182C54; }
 
-    /* Submit */
     button[type="submit"] {
       width: 100%;
       background: #F03424;
@@ -362,7 +357,6 @@
     button[type="submit"]:hover { background: #d42e1e; }
     button[type="submit"]:disabled { background: #c0c8d4; cursor: not-allowed; }
 
-    /* Thank you */
     #thanks {
       display: none;
       text-align: center;
@@ -400,11 +394,25 @@
       line-height: 1.6;
     }
 
-    /* View transitions */
     .view { display: none; }
     .view.active { display: block; }
+
+    .loading-status {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+
+    .loading-status.error {
+      color: #F03424;
+      font-weight: 700;
+    }
   </style>
 </head>
+
 <body>
 
 <div class="header">
@@ -417,11 +425,15 @@
     </svg>
     <div class="logo-text">PROPERTY<br/>SCOUT</div>
   </div>
+
   <h1>แจ้งปัญหา / Report Issue</h1>
   <p>กรอกข้อมูลสั้นๆ เพื่อให้ทีมช่วยได้ตรงจุด<br/>Fill in the details so we can help you faster</p>
 </div>
 
-<!-- Step indicators -->
+<div id="liff-status" class="loading-status">
+  กำลังเชื่อมต่อ LINE... / Connecting to LINE...
+</div>
+
 <div class="step-indicator" id="step-indicator">
   <div class="step-dot active" id="dot-1"></div>
   <div class="step-dot" id="dot-2"></div>
@@ -429,7 +441,7 @@
 
 <div class="card">
 
-  <!-- Step 1: Personal info + category picker -->
+  <!-- Step 1 -->
   <div class="view active" id="step1">
     <div class="field">
       <label class="field-label" for="name">
@@ -465,8 +477,8 @@
       <label class="field-label">
         ประเภทการติดต่อ / Inquiry Type <span class="required">*</span>
       </label>
-      <div class="category-list">
 
+      <div class="category-list">
         <div class="category-card" data-category="maintenance">
           <div class="category-icon">🔧</div>
           <div class="category-card-text">
@@ -493,12 +505,11 @@
           </div>
           <div class="category-card-arrow">›</div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- Step 2: Sub-type picker + details + submit -->
+  <!-- Step 2 -->
   <div class="view" id="step2">
     <button class="back-btn" id="back-btn">
       ‹ &nbsp;เปลี่ยนประเภท / Change Category
@@ -526,6 +537,7 @@
     <button type="submit" id="submit-btn">ส่งข้อมูล / Submit →</button>
   </div>
 
+  <!-- Thank you -->
   <div id="thanks">
     <div class="check">
       <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -533,59 +545,123 @@
       </svg>
     </div>
     <h2>ขอบคุณครับ! / Thank you!</h2>
-    <p>ทีมงาน PropertyScout ได้รับข้อมูลของคุณแล้ว<br/>เราจะติดต่อกลับโดยเร็วที่สุด<br/><br/>We have received your information.<br/>Our team will get back to you shortly.</p>
+    <p>
+      ทีมงาน PropertyScout ได้รับข้อมูลของคุณแล้ว<br/>
+      เราจะติดต่อกลับโดยเร็วที่สุด<br/><br/>
+      We have received your information.<br/>
+      Our team will get back to you shortly.
+    </p>
   </div>
 </div>
 
 <script>
+  /*********************************************************
+   * CONFIG
+   *********************************************************/
   const LIFF_ID = "2009856018-puMcAsjV";
   const WEBHOOK_URL = "https://hook.eu2.make.com/ewxy5cn9d5g3qnyzxub1i7rb317vyyvn";
 
+  /*********************************************************
+   * GLOBAL LINE PROFILE DATA
+   *********************************************************/
+  let lineProfile = {
+    userId: "",
+    displayName: "",
+    pictureUrl: "",
+    statusMessage: ""
+  };
+
+  let liffReady = false;
+  let selectedCategory = null;
+
+  /*********************************************************
+   * CATEGORY DATA
+   *********************************************************/
   const CATEGORIES = {
     maintenance: {
       label: "🔧 ซ่อมแซม / Maintenance",
       options: [
-        { id: "inroom",  value: "In-room Issues",    th: "ปัญหาในห้องพัก (น้ำ ไฟ เครื่องใช้ไฟฟ้า)",    en: "In-room Issues (water, electricity, appliances)" },
-        { id: "drain",   value: "Drain Blockage",     th: "ท่อตัน / ปัญหากลิ่น",                          en: "Drain Blockage or Unpleasant Odors" },
-        { id: "aircon",  value: "Air Conditioning",   th: "ปัญหาแอร์ (น้ำรั่ว ไม่เย็น ล้างแอร์)",         en: "Air Conditioning Issues (leaking, not cooling, cleaning)" },
-        { id: "pest",    value: "Pest Issues",        th: "ปัญหาสัตว์รบกวน",                               en: "Pest Issues" },
-        { id: "keycard", value: "Key Card / Access",  th: "คีย์การ์ด / การเข้าออก",                        en: "Key Card or Access-related Issues" },
-        { id: "parcel",  value: "Parcel / Common Area", th: "พัสดุ / พื้นที่ส่วนกลาง",                    en: "Parcel or Common Area Inquiries" },
+        { id: "inroom",  value: "In-room Issues", th: "ปัญหาในห้องพัก (น้ำ ไฟ เครื่องใช้ไฟฟ้า)", en: "In-room Issues (water, electricity, appliances)" },
+        { id: "drain",   value: "Drain Blockage", th: "ท่อตัน / ปัญหากลิ่น", en: "Drain Blockage or Unpleasant Odors" },
+        { id: "aircon",  value: "Air Conditioning", th: "ปัญหาแอร์ (น้ำรั่ว ไม่เย็น ล้างแอร์)", en: "Air Conditioning Issues (leaking, not cooling, cleaning)" },
+        { id: "pest",    value: "Pest Issues", th: "ปัญหาสัตว์รบกวน", en: "Pest Issues" },
+        { id: "keycard", value: "Key Card / Access", th: "คีย์การ์ด / การเข้าออก", en: "Key Card or Access-related Issues" },
+        { id: "parcel",  value: "Parcel / Common Area", th: "พัสดุ / พื้นที่ส่วนกลาง", en: "Parcel or Common Area Inquiries" }
       ]
     },
+
     lease: {
       label: "📄 สัญญาเช่า / Lease & Contract",
       options: [
-        { id: "extension",        value: "Extension Follow Up",   th: "ติดตามการต่อสัญญา",           en: "Extension Follow Up" },
-        { id: "checkout",         value: "Check Out Planning",    th: "วางแผนการย้ายออก",             en: "Check Out Planning" },
-        { id: "earlytermination", value: "Early Termination",     th: "ยกเลิกสัญญาก่อนกำหนด",        en: "Early Termination" },
-        { id: "contract",         value: "Contract Inquiries",    th: "สอบถามสัญญาเช่า",              en: "Contract Inquiries" },
-        { id: "tenancydocs",      value: "Tenancy Documents",     th: "เอกสารผู้เช่า",                en: "Tenancy Documents" },
-        { id: "tm30",             value: "TM30",                  th: "TM30",                         en: "TM30" },
+        { id: "extension", value: "Extension Follow Up", th: "ติดตามการต่อสัญญา", en: "Extension Follow Up" },
+        { id: "checkout", value: "Check Out Planning", th: "วางแผนการย้ายออก", en: "Check Out Planning" },
+        { id: "earlytermination", value: "Early Termination", th: "ยกเลิกสัญญาก่อนกำหนด", en: "Early Termination" },
+        { id: "contract", value: "Contract Inquiries", th: "สอบถามสัญญาเช่า", en: "Contract Inquiries" },
+        { id: "tenancydocs", value: "Tenancy Documents", th: "เอกสารผู้เช่า", en: "Tenancy Documents" },
+        { id: "tm30", value: "TM30", th: "TM30", en: "TM30" }
       ]
     },
+
     payments: {
       label: "💰 การเงิน / Payments",
       options: [
-        { id: "deposit", value: "Deposit Follow Up", th: "ติดตามเงินประกัน",    en: "Deposit Follow Up" },
-        { id: "payment", value: "Payment Follow Up", th: "ติดตามการชำระเงิน",   en: "Payment Follow Up" },
+        { id: "deposit", value: "Deposit Follow Up", th: "ติดตามเงินประกัน", en: "Deposit Follow Up" },
+        { id: "payment", value: "Payment Follow Up", th: "ติดตามการชำระเงิน", en: "Payment Follow Up" }
       ]
     }
   };
 
-  let selectedCategory = null;
+  /*********************************************************
+   * LIFF INIT
+   *********************************************************/
+  async function initLIFF() {
+    const statusEl = document.getElementById("liff-status");
 
-  async function init() {
     try {
-      await liff.init({ liffId: LIFF_ID });
-    } catch (e) {
-      console.warn("LIFF init failed, running in browser mode", e);
+      await liff.init({
+        liffId: LIFF_ID,
+        withLoginOnExternalBrowser: true
+      });
+
+      if (!liff.isLoggedIn()) {
+        statusEl.textContent = "กรุณาเข้าสู่ระบบ LINE... / Redirecting to LINE login...";
+        liff.login();
+        return;
+      }
+
+      const profile = await liff.getProfile();
+
+      if (!profile || !profile.userId) {
+        throw new Error("LINE userId not found");
+      }
+
+      lineProfile = {
+        userId: profile.userId || "",
+        displayName: profile.displayName || "",
+        pictureUrl: profile.pictureUrl || "",
+        statusMessage: profile.statusMessage || ""
+      };
+
+      liffReady = true;
+      statusEl.textContent = "เชื่อมต่อ LINE สำเร็จ / LINE connected";
+      statusEl.classList.remove("error");
+
+      console.log("LINE Profile:", lineProfile);
+
+    } catch (error) {
+      console.error("LIFF init/profile error:", error);
+
+      liffReady = false;
+      statusEl.textContent = "ไม่สามารถเชื่อมต่อ LINE ได้ กรุณาเปิดฟอร์มผ่าน LINE Rich Menu อีกครั้ง";
+      statusEl.classList.add("error");
     }
   }
 
-  init();
+  initLIFF();
 
-  // Validate step 1 personal info fields
+  /*********************************************************
+   * STEP 1 VALIDATION
+   *********************************************************/
   function step1Valid() {
     return (
       document.getElementById("name").value.trim() &&
@@ -595,15 +671,22 @@
     );
   }
 
-  // Category card click → go to step 2
+  function highlightEmptyStep1Fields() {
+    ["name", "phone", "building", "unit"].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        el.style.borderColor = "#F03424";
+      }
+    });
+  }
+
+  /*********************************************************
+   * CATEGORY CLICK
+   *********************************************************/
   document.querySelectorAll(".category-card").forEach(card => {
     card.addEventListener("click", () => {
       if (!step1Valid()) {
-        // Highlight empty fields
-        ["name", "phone", "building", "unit"].forEach(id => {
-          const el = document.getElementById(id);
-          if (!el.value.trim()) el.style.borderColor = "#F03424";
-        });
+        highlightEmptyStep1Fields();
         document.getElementById("name").focus();
         return;
       }
@@ -614,18 +697,25 @@
     });
   });
 
-  // Clear red border on input
+  /*********************************************************
+   * CLEAR RED BORDER ON INPUT
+   *********************************************************/
   ["name", "phone", "building", "unit"].forEach(id => {
     document.getElementById(id).addEventListener("input", function () {
       this.style.borderColor = "";
     });
   });
 
-  // Back button
+  /*********************************************************
+   * BACK BUTTON
+   *********************************************************/
   document.getElementById("back-btn").addEventListener("click", () => {
     showStep(1);
   });
 
+  /*********************************************************
+   * SHOW STEP
+   *********************************************************/
   function showStep(n) {
     document.getElementById("step1").classList.toggle("active", n === 1);
     document.getElementById("step2").classList.toggle("active", n === 2);
@@ -634,15 +724,17 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  /*********************************************************
+   * RENDER STEP 2
+   *********************************************************/
   function renderStep2(category) {
     const cat = CATEGORIES[category];
 
-    // Badge
     document.getElementById("selected-badge").innerHTML =
       `<div class="selected-category-badge">${cat.label}</div>`;
 
-    // Radio options
     const list = document.getElementById("inquiry-list");
+
     list.innerHTML = cat.options.map(opt => `
       <div class="inquiry-option">
         <input type="radio" name="inquiryType" id="${opt.id}" value="${opt.value}" />
@@ -657,58 +749,116 @@
     `).join("");
   }
 
-  // Submit
+  /*********************************************************
+   * SUBMIT
+   *********************************************************/
   document.getElementById("submit-btn").addEventListener("click", async function () {
     const checked = document.querySelector('input[name="inquiryType"]:checked');
+
     if (!checked) {
       document.getElementById("inquiry-list").style.outline = "2px solid #F03424";
       document.getElementById("inquiry-list").style.borderRadius = "10px";
       return;
     }
+
     document.getElementById("inquiry-list").style.outline = "";
 
     const btn = this;
     btn.disabled = true;
     btn.textContent = "กำลังส่ง... / Sending...";
 
-    let userId = "unknown";
+    /*********************************************************
+     * IMPORTANT: DO NOT SUBMIT WITHOUT LINE USER ID
+     *********************************************************/
     try {
-      if (liff.isLoggedIn()) {
+      if (!liffReady || !lineProfile.userId) {
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
         const profile = await liff.getProfile();
-        userId = profile.userId;
+
+        if (!profile || !profile.userId) {
+          throw new Error("Cannot collect LINE userId");
+        }
+
+        lineProfile = {
+          userId: profile.userId || "",
+          displayName: profile.displayName || "",
+          pictureUrl: profile.pictureUrl || "",
+          statusMessage: profile.statusMessage || ""
+        };
+
+        liffReady = true;
       }
-    } catch (_) {}
+    } catch (error) {
+      console.error("Cannot get LINE userId:", error);
+
+      alert("ไม่สามารถดึงข้อมูล LINE User ID ได้ กรุณาเปิดฟอร์มผ่าน LINE Rich Menu อีกครั้ง");
+
+      btn.disabled = false;
+      btn.textContent = "ส่งข้อมูล / Submit →";
+      return;
+    }
 
     const payload = {
-      userId,
-      name: document.getElementById("name").value,
-      phone: document.getElementById("phone").value,
-      building: document.getElementById("building").value,
-      unit: document.getElementById("unit").value,
+      userId: lineProfile.userId,
+      lineDisplayName: lineProfile.displayName,
+      linePictureUrl: lineProfile.pictureUrl,
+      lineStatusMessage: lineProfile.statusMessage,
+
+      name: document.getElementById("name").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      building: document.getElementById("building").value.trim(),
+      unit: document.getElementById("unit").value.trim(),
+
       category: selectedCategory,
+      categoryLabel: CATEGORIES[selectedCategory]?.label || "",
       inquiryType: checked.value,
-      details: document.getElementById("details").value,
+      details: document.getElementById("details").value.trim(),
+
+      source: "LINE Rich Menu LIFF Form",
       submittedAt: new Date().toISOString()
     };
 
+    console.log("Submitting payload:", payload);
+
     try {
-      await fetch(WEBHOOK_URL, {
+      const response = await fetch(WEBHOOK_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify(payload)
       });
+
+      if (!response.ok) {
+        throw new Error("Webhook response was not OK");
+      }
+
     } catch (err) {
       console.error("Webhook error:", err);
+
+      alert("ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง / Submission failed. Please try again.");
+
+      btn.disabled = false;
+      btn.textContent = "ส่งข้อมูล / Submit →";
+      return;
     }
 
     document.getElementById("step2").style.display = "none";
     document.getElementById("step-indicator").style.display = "none";
+    document.getElementById("liff-status").style.display = "none";
     document.getElementById("thanks").style.display = "block";
 
     setTimeout(() => {
-      try { liff.closeWindow(); } catch (_) {}
+      try {
+        liff.closeWindow();
+      } catch (_) {}
     }, 2500);
   });
 </script>
+
 </body>
 </html>
