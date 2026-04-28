@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PropertyScout — แจ้งปัญหา / Report Issue</title>
 
-  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -336,7 +334,9 @@
       margin-bottom: 20px;
     }
 
-    .back-btn:hover { color: #182C54; }
+    .back-btn:hover {
+      color: #182C54;
+    }
 
     button[type="submit"] {
       width: 100%;
@@ -354,8 +354,14 @@
       letter-spacing: 0.3px;
     }
 
-    button[type="submit"]:hover { background: #d42e1e; }
-    button[type="submit"]:disabled { background: #c0c8d4; cursor: not-allowed; }
+    button[type="submit"]:hover {
+      background: #d42e1e;
+    }
+
+    button[type="submit"]:disabled {
+      background: #c0c8d4;
+      cursor: not-allowed;
+    }
 
     #thanks {
       display: none;
@@ -394,21 +400,12 @@
       line-height: 1.6;
     }
 
-    .view { display: none; }
-    .view.active { display: block; }
-
-    .loading-status {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 10px 20px;
-      font-size: 12px;
-      color: #6b7280;
-      text-align: center;
+    .view {
+      display: none;
     }
 
-    .loading-status.error {
-      color: #F03424;
-      font-weight: 700;
+    .view.active {
+      display: block;
     }
   </style>
 </head>
@@ -423,15 +420,15 @@
       <circle cx="18" cy="21" r="2.5" fill="white"/>
       <path d="M13 24.5C14.5 23 16.2 22.5 18 22.5C19.8 22.5 21.5 23 23 24.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
     </svg>
+
     <div class="logo-text">PROPERTY<br/>SCOUT</div>
   </div>
 
   <h1>แจ้งปัญหา / Report Issue</h1>
-  <p>กรอกข้อมูลสั้นๆ เพื่อให้ทีมช่วยได้ตรงจุด<br/>Fill in the details so we can help you faster</p>
-</div>
-
-<div id="liff-status" class="loading-status">
-  กำลังเชื่อมต่อ LINE... / Connecting to LINE...
+  <p>
+    กรอกข้อมูลสั้นๆ เพื่อให้ทีมช่วยได้ตรงจุด<br/>
+    Fill in the details so we can help you faster
+  </p>
 </div>
 
 <div class="step-indicator" id="step-indicator">
@@ -441,7 +438,6 @@
 
 <div class="card">
 
-  <!-- Step 1 -->
   <div class="view active" id="step1">
     <div class="field">
       <label class="field-label" for="name">
@@ -509,7 +505,6 @@
     </div>
   </div>
 
-  <!-- Step 2 -->
   <div class="view" id="step2">
     <button class="back-btn" id="back-btn">
       ‹ &nbsp;เปลี่ยนประเภท / Change Category
@@ -521,6 +516,7 @@
       <label class="field-label">
         เรื่องที่ต้องการแจ้ง / Issue Type <span class="required">*</span>
       </label>
+
       <div class="inquiry-list" id="inquiry-list"></div>
     </div>
 
@@ -537,13 +533,13 @@
     <button type="submit" id="submit-btn">ส่งข้อมูล / Submit →</button>
   </div>
 
-  <!-- Thank you -->
   <div id="thanks">
     <div class="check">
       <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M7 16L13 22L25 10" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
+
     <h2>ขอบคุณครับ! / Thank you!</h2>
     <p>
       ทีมงาน PropertyScout ได้รับข้อมูลของคุณแล้ว<br/>
@@ -555,113 +551,170 @@
 </div>
 
 <script>
-  /*********************************************************
-   * CONFIG
-   *********************************************************/
   const LIFF_ID = "2009856018-puMcAsjV";
-  const WEBHOOK_URL = "https://hook.eu2.make.com/jsvpyavb9g93bh2rru2fk415gswiaedh";
+  const WEBHOOK_URL = "https://hook.eu2.make.com/ewxy5cn9d5g3qnyzxub1i7rb317vyyvn";
 
-  /*********************************************************
-   * GLOBAL LINE PROFILE DATA
-   *********************************************************/
-  let lineProfile = {
-    userId: "",
-    displayName: "",
-    pictureUrl: "",
-    statusMessage: ""
-  };
-
-  let liffReady = false;
-  let selectedCategory = null;
-
-  /*********************************************************
-   * CATEGORY DATA
-   *********************************************************/
   const CATEGORIES = {
     maintenance: {
       label: "🔧 ซ่อมแซม / Maintenance",
       options: [
-        { id: "inroom",  value: "In-room Issues", th: "ปัญหาในห้องพัก (น้ำ ไฟ เครื่องใช้ไฟฟ้า)", en: "In-room Issues (water, electricity, appliances)" },
-        { id: "drain",   value: "Drain Blockage", th: "ท่อตัน / ปัญหากลิ่น", en: "Drain Blockage or Unpleasant Odors" },
-        { id: "aircon",  value: "Air Conditioning", th: "ปัญหาแอร์ (น้ำรั่ว ไม่เย็น ล้างแอร์)", en: "Air Conditioning Issues (leaking, not cooling, cleaning)" },
-        { id: "pest",    value: "Pest Issues", th: "ปัญหาสัตว์รบกวน", en: "Pest Issues" },
-        { id: "keycard", value: "Key Card / Access", th: "คีย์การ์ด / การเข้าออก", en: "Key Card or Access-related Issues" },
-        { id: "parcel",  value: "Parcel / Common Area", th: "พัสดุ / พื้นที่ส่วนกลาง", en: "Parcel or Common Area Inquiries" }
+        {
+          id: "inroom",
+          value: "In-room Issues",
+          th: "ปัญหาในห้องพัก (น้ำ ไฟ เครื่องใช้ไฟฟ้า)",
+          en: "In-room Issues (water, electricity, appliances)"
+        },
+        {
+          id: "drain",
+          value: "Drain Blockage",
+          th: "ท่อตัน / ปัญหากลิ่น",
+          en: "Drain Blockage or Unpleasant Odors"
+        },
+        {
+          id: "aircon",
+          value: "Air Conditioning",
+          th: "ปัญหาแอร์ (น้ำรั่ว ไม่เย็น ล้างแอร์)",
+          en: "Air Conditioning Issues (leaking, not cooling, cleaning)"
+        },
+        {
+          id: "pest",
+          value: "Pest Issues",
+          th: "ปัญหาสัตว์รบกวน",
+          en: "Pest Issues"
+        },
+        {
+          id: "keycard",
+          value: "Key Card / Access",
+          th: "คีย์การ์ด / การเข้าออก",
+          en: "Key Card or Access-related Issues"
+        },
+        {
+          id: "parcel",
+          value: "Parcel / Common Area",
+          th: "พัสดุ / พื้นที่ส่วนกลาง",
+          en: "Parcel or Common Area Inquiries"
+        }
       ]
     },
 
     lease: {
       label: "📄 สัญญาเช่า / Lease & Contract",
       options: [
-        { id: "extension", value: "Extension Follow Up", th: "ติดตามการต่อสัญญา", en: "Extension Follow Up" },
-        { id: "checkout", value: "Check Out Planning", th: "วางแผนการย้ายออก", en: "Check Out Planning" },
-        { id: "earlytermination", value: "Early Termination", th: "ยกเลิกสัญญาก่อนกำหนด", en: "Early Termination" },
-        { id: "contract", value: "Contract Inquiries", th: "สอบถามสัญญาเช่า", en: "Contract Inquiries" },
-        { id: "tenancydocs", value: "Tenancy Documents", th: "เอกสารผู้เช่า", en: "Tenancy Documents" },
-        { id: "tm30", value: "TM30", th: "TM30", en: "TM30" }
+        {
+          id: "extension",
+          value: "Extension Follow Up",
+          th: "ติดตามการต่อสัญญา",
+          en: "Extension Follow Up"
+        },
+        {
+          id: "checkout",
+          value: "Check Out Planning",
+          th: "วางแผนการย้ายออก",
+          en: "Check Out Planning"
+        },
+        {
+          id: "earlytermination",
+          value: "Early Termination",
+          th: "ยกเลิกสัญญาก่อนกำหนด",
+          en: "Early Termination"
+        },
+        {
+          id: "contract",
+          value: "Contract Inquiries",
+          th: "สอบถามสัญญาเช่า",
+          en: "Contract Inquiries"
+        },
+        {
+          id: "tenancydocs",
+          value: "Tenancy Documents",
+          th: "เอกสารผู้เช่า",
+          en: "Tenancy Documents"
+        },
+        {
+          id: "tm30",
+          value: "TM30",
+          th: "TM30",
+          en: "TM30"
+        }
       ]
     },
 
     payments: {
       label: "💰 การเงิน / Payments",
       options: [
-        { id: "deposit", value: "Deposit Follow Up", th: "ติดตามเงินประกัน", en: "Deposit Follow Up" },
-        { id: "payment", value: "Payment Follow Up", th: "ติดตามการชำระเงิน", en: "Payment Follow Up" }
+        {
+          id: "deposit",
+          value: "Deposit Follow Up",
+          th: "ติดตามเงินประกัน",
+          en: "Deposit Follow Up"
+        },
+        {
+          id: "payment",
+          value: "Payment Follow Up",
+          th: "ติดตามการชำระเงิน",
+          en: "Payment Follow Up"
+        }
       ]
     }
   };
 
-  /*********************************************************
-   * LIFF INIT
-   *********************************************************/
+  let selectedCategory = null;
+
+  let lineData = {
+    userId: "unknown",
+    displayName: "",
+    pictureUrl: "",
+    statusMessage: "",
+    liffReady: false,
+    isInClient: false,
+    isLoggedIn: false,
+    error: ""
+  };
+
   async function initLIFF() {
-    const statusEl = document.getElementById("liff-status");
-
     try {
-      await liff.init({
-        liffId: LIFF_ID,
-        withLoginOnExternalBrowser: true
-      });
+      await liff.init({ liffId: LIFF_ID });
 
-      if (!liff.isLoggedIn()) {
-        statusEl.textContent = "กรุณาเข้าสู่ระบบ LINE... / Redirecting to LINE login...";
-        liff.login();
-        return;
+      lineData.liffReady = true;
+      lineData.isInClient = liff.isInClient();
+      lineData.isLoggedIn = liff.isLoggedIn();
+
+      /*
+        Important:
+        Do not force liff.login() here.
+        This form is designed to open from LINE Rich Menu.
+        If we force login inside the LIFF browser, many users may see browser login errors.
+      */
+
+      try {
+        const profile = await liff.getProfile();
+
+        lineData.userId = profile.userId || "unknown";
+        lineData.displayName = profile.displayName || "";
+        lineData.pictureUrl = profile.pictureUrl || "";
+        lineData.statusMessage = profile.statusMessage || "";
+
+        console.log("LINE profile collected:", lineData);
+
+      } catch (profileError) {
+        console.warn("Could not get LINE profile:", profileError);
+        lineData.error = "Profile error: " + String(profileError);
       }
 
-      const profile = await liff.getProfile();
+    } catch (initError) {
+      console.warn("LIFF init failed:", initError);
+      lineData.error = "LIFF init error: " + String(initError);
 
-      if (!profile || !profile.userId) {
-        throw new Error("LINE userId not found");
-      }
-
-      lineProfile = {
-        userId: profile.userId || "",
-        displayName: profile.displayName || "",
-        pictureUrl: profile.pictureUrl || "",
-        statusMessage: profile.statusMessage || ""
-      };
-
-      liffReady = true;
-      statusEl.textContent = "เชื่อมต่อ LINE สำเร็จ / LINE connected";
-      statusEl.classList.remove("error");
-
-      console.log("LINE Profile:", lineProfile);
-
-    } catch (error) {
-      console.error("LIFF init/profile error:", error);
-
-      liffReady = false;
-      statusEl.textContent = "ไม่สามารถเชื่อมต่อ LINE ได้ กรุณาเปิดฟอร์มผ่าน LINE Rich Menu อีกครั้ง";
-      statusEl.classList.add("error");
+      /*
+        Do not block the form.
+        The user can still submit manually.
+        Payload will show userId = unknown and liffError will contain the reason.
+      */
     }
   }
 
   initLIFF();
 
-  /*********************************************************
-   * STEP 1 VALIDATION
-   *********************************************************/
   function step1Valid() {
     return (
       document.getElementById("name").value.trim() &&
@@ -671,22 +724,22 @@
     );
   }
 
-  function highlightEmptyStep1Fields() {
+  function highlightEmptyFields() {
     ["name", "phone", "building", "unit"].forEach(id => {
       const el = document.getElementById(id);
+
       if (!el.value.trim()) {
         el.style.borderColor = "#F03424";
+      } else {
+        el.style.borderColor = "";
       }
     });
   }
 
-  /*********************************************************
-   * CATEGORY CLICK
-   *********************************************************/
   document.querySelectorAll(".category-card").forEach(card => {
     card.addEventListener("click", () => {
       if (!step1Valid()) {
-        highlightEmptyStep1Fields();
+        highlightEmptyFields();
         document.getElementById("name").focus();
         return;
       }
@@ -697,36 +750,29 @@
     });
   });
 
-  /*********************************************************
-   * CLEAR RED BORDER ON INPUT
-   *********************************************************/
   ["name", "phone", "building", "unit"].forEach(id => {
     document.getElementById(id).addEventListener("input", function () {
       this.style.borderColor = "";
     });
   });
 
-  /*********************************************************
-   * BACK BUTTON
-   *********************************************************/
   document.getElementById("back-btn").addEventListener("click", () => {
     showStep(1);
   });
 
-  /*********************************************************
-   * SHOW STEP
-   *********************************************************/
   function showStep(n) {
     document.getElementById("step1").classList.toggle("active", n === 1);
     document.getElementById("step2").classList.toggle("active", n === 2);
+
     document.getElementById("dot-1").classList.toggle("active", n === 1);
     document.getElementById("dot-2").classList.toggle("active", n === 2);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }
 
-  /*********************************************************
-   * RENDER STEP 2
-   *********************************************************/
   function renderStep2(category) {
     const cat = CATEGORIES[category];
 
@@ -749,15 +795,41 @@
     `).join("");
   }
 
-  /*********************************************************
-   * SUBMIT
-   *********************************************************/
+  async function refreshLineProfileBeforeSubmit() {
+    try {
+      if (!lineData.liffReady) {
+        return;
+      }
+
+      if (lineData.userId && lineData.userId !== "unknown") {
+        return;
+      }
+
+      const profile = await liff.getProfile();
+
+      lineData.userId = profile.userId || "unknown";
+      lineData.displayName = profile.displayName || "";
+      lineData.pictureUrl = profile.pictureUrl || "";
+      lineData.statusMessage = profile.statusMessage || "";
+
+      console.log("LINE profile refreshed before submit:", lineData);
+
+    } catch (error) {
+      console.warn("Final profile collection failed:", error);
+
+      lineData.error = lineData.error
+        ? lineData.error + " | Final profile error: " + String(error)
+        : "Final profile error: " + String(error);
+    }
+  }
+
   document.getElementById("submit-btn").addEventListener("click", async function () {
     const checked = document.querySelector('input[name="inquiryType"]:checked');
 
     if (!checked) {
-      document.getElementById("inquiry-list").style.outline = "2px solid #F03424";
-      document.getElementById("inquiry-list").style.borderRadius = "10px";
+      const list = document.getElementById("inquiry-list");
+      list.style.outline = "2px solid #F03424";
+      list.style.borderRadius = "10px";
       return;
     }
 
@@ -767,46 +839,18 @@
     btn.disabled = true;
     btn.textContent = "กำลังส่ง... / Sending...";
 
-    /*********************************************************
-     * IMPORTANT: DO NOT SUBMIT WITHOUT LINE USER ID
-     *********************************************************/
-    try {
-      if (!liffReady || !lineProfile.userId) {
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
-
-        const profile = await liff.getProfile();
-
-        if (!profile || !profile.userId) {
-          throw new Error("Cannot collect LINE userId");
-        }
-
-        lineProfile = {
-          userId: profile.userId || "",
-          displayName: profile.displayName || "",
-          pictureUrl: profile.pictureUrl || "",
-          statusMessage: profile.statusMessage || ""
-        };
-
-        liffReady = true;
-      }
-    } catch (error) {
-      console.error("Cannot get LINE userId:", error);
-
-      alert("ไม่สามารถดึงข้อมูล LINE User ID ได้ กรุณาเปิดฟอร์มผ่าน LINE Rich Menu อีกครั้ง");
-
-      btn.disabled = false;
-      btn.textContent = "ส่งข้อมูล / Submit →";
-      return;
-    }
+    await refreshLineProfileBeforeSubmit();
 
     const payload = {
-      userId: lineProfile.userId,
-      lineDisplayName: lineProfile.displayName,
-      linePictureUrl: lineProfile.pictureUrl,
-      lineStatusMessage: lineProfile.statusMessage,
+      userId: lineData.userId,
+      lineDisplayName: lineData.displayName,
+      linePictureUrl: lineData.pictureUrl,
+      lineStatusMessage: lineData.statusMessage,
+
+      liffReady: lineData.liffReady,
+      isInClient: lineData.isInClient,
+      isLoggedIn: lineData.isLoggedIn,
+      liffError: lineData.error,
 
       name: document.getElementById("name").value.trim(),
       phone: document.getElementById("phone").value.trim(),
@@ -834,7 +878,7 @@
       });
 
       if (!response.ok) {
-        throw new Error("Webhook response was not OK");
+        throw new Error("Webhook returned status " + response.status);
       }
 
     } catch (err) {
@@ -849,7 +893,6 @@
 
     document.getElementById("step2").style.display = "none";
     document.getElementById("step-indicator").style.display = "none";
-    document.getElementById("liff-status").style.display = "none";
     document.getElementById("thanks").style.display = "block";
 
     setTimeout(() => {
